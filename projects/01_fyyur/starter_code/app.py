@@ -164,13 +164,33 @@ def search_venues():
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
+  # response={
+  #   "count": 1,
+  #   "data": [{
+  #     "id": 2,
+  #     "name": "The Dueling Pianos Bar",
+  #     "num_upcoming_shows": 0,
+  #   }]
+  # }
+    # get data from search box
+  f = request.form
+  # for key in f.keys():
+  #   for value in f.getlist(key):
+  #     print (key,":",value)
+  search_term = f.get('search_term')
+  resultsCount=Venue.query.with_entities(func.count(Venue.id)).filter(Venue.name.ilike('%'+search_term+'%')).all()
+  results = Venue.query.filter(Venue.name.ilike('%'+search_term+'%')).all()
+  data=[]
+  for vnu in results:
+    upcomingshowsPerVenue = Show.query.with_entities(func.count(Show.id)).filter(Show.start_time > datetime.datetime.now()).group_by(Show.venue_id).having(Show.venue_id==vnu.id).all()
+    data.append({
+      "id":vnu.id,
+      "name":vnu.name,
+      "num_upcoming_shows":upcomingshowsPerVenue
+    })
   response={
-    "count": 1,
-    "data": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
+    "count": resultsCount[0][0],
+    "data": data
   }
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
