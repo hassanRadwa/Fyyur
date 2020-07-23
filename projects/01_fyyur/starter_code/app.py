@@ -359,13 +359,33 @@ def search_artists():
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
   # search for "band" should return "The Wild Sax Band".
+  # response={
+  #   "count": 1,
+  #   "data": [{
+  #     "id": 4,
+  #     "name": "Guns N Petals",
+  #     "num_upcoming_shows": 0,
+  #   }]
+  # }
+  # get data from search box
+  f = request.form
+  # for key in f.keys():
+  #   for value in f.getlist(key):
+  #     print (key,":",value)
+  search_term = f.get('search_term')
+  resultsCount=Artist.query.with_entities(func.count(Artist.id)).filter(Artist.name.ilike('%'+search_term+'%')).all()
+  results = Artist.query.filter(Artist.name.ilike('%'+search_term+'%')).all()
+  data=[]
+  for art in results:
+    upcomingshowsPerArtist = Show.query.with_entities(func.count(Show.id)).filter(Show.start_time > datetime.datetime.now()).group_by(Show.artist_id).having(Show.artist_id==art.id).all()
+    data.append({
+      "id":art.id,
+      "name":art.name,
+      "num_upcoming_shows":upcomingshowsPerArtist
+    })
   response={
-    "count": 1,
-    "data": [{
-      "id": 4,
-      "name": "Guns N Petals",
-      "num_upcoming_shows": 0,
-    }]
+    "count": resultsCount[0][0],
+    "data": data
   }
   return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
 
