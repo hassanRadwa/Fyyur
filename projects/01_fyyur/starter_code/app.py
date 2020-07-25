@@ -125,9 +125,9 @@ def addValuesFromFormInDb(f,txt):
     #get data from form and assign it to model
     for attr in f.keys():
       # print('attr: ',attr)
-      # print('newVenue.'+attr+' = convertListToString(f.getlist(\''+attr+'\'))')
-      exec('newModel.'+attr+' = convertListToString(f.getlist(\''+attr+'\'))')
-      # exec('print(\'newVenue.'+attr+' : \'+newVenue.'+attr+')')
+      # print('newVenue.' + attr + ' = convertListToString(f.getlist(\'' + attr + '\'))')
+      exec('newModel.' + attr + ' = convertListToString(f.getlist(\'' + attr + '\'))')
+      # exec('print(\'newVenue.' + attr + ' : \' + newVenue.' + attr + ')')
     if modelType == 'venue':
       newModel.seeking_talent  = strToBool(newModel.seeking_talent)
     elif modelType == 'artist':
@@ -136,7 +136,7 @@ def addValuesFromFormInDb(f,txt):
       db.session.add(newModel)
     db.session.commit()
     # on successful db insert, flash success
-    flash(modelType.capitalize() + ' ' + f['name'] + ' was successfully ' +formType+ 'ed!')
+    flash(modelType.capitalize() + ' ' + f['name'] + ' was successfully ' + formType + 'ed!')
   except:# TODO: on unsuccessful db insert, flash an error instead.
   # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
@@ -227,8 +227,8 @@ def search_venues():
   #   for value in f.getlist(key):
   #     print (key,":",value)
   search_term = f.get('search_term')
-  resultsCount=Venue.query.with_entities(func.count(Venue.id)).filter(Venue.name.ilike('%'+search_term+'%')).all()
-  results = Venue.query.filter(Venue.name.ilike('%'+search_term+'%')).all()
+  resultsCount=Venue.query.with_entities(func.count(Venue.id)).filter(Venue.name.ilike('%' + search_term + '%')).all()
+  results = Venue.query.filter(Venue.name.ilike('%' + search_term + '%')).all()
   data=[]
   for vnu in results:
     upcomingshowsPerVenue = Show.query.with_entities(func.count(Show.id)).filter(Show.start_time > datetime.datetime.now()).group_by(Show.venue_id).having(Show.venue_id==vnu.id).all()
@@ -429,8 +429,8 @@ def search_artists():
   #   for value in f.getlist(key):
   #     print (key,":",value)
   search_term = f.get('search_term')
-  resultsCount=Artist.query.with_entities(func.count(Artist.id)).filter(Artist.name.ilike('%'+search_term+'%')).all()
-  results = Artist.query.filter(Artist.name.ilike('%'+search_term+'%')).all()
+  resultsCount=Artist.query.with_entities(func.count(Artist.id)).filter(Artist.name.ilike('%' + search_term + '%')).all()
+  results = Artist.query.filter(Artist.name.ilike('%' + search_term + '%')).all()
   data=[]
   for art in results:
     upcomingshowsPerArtist = Show.query.with_entities(func.count(Show.id)).filter(Show.start_time > datetime.datetime.now()).group_by(Show.artist_id).having(Show.artist_id==art.id).all()
@@ -596,26 +596,21 @@ def edit_artist(artist_id):
     "phone":                s_artist.phone,
     "website":              s_artist.website,
     "facebook_link":        s_artist.facebook_link,
-    "seeking_venue":       s_artist.seeking_venue,
+    "seeking_venue":        s_artist.seeking_venue,
     "seeking_description":  s_artist.seeking_description,
     "image_link":           s_artist.image_link
   }
-  # members = [attr for attr in dir(s_venue) if not callable(getattr(s_venue, attr)) and not attr.startswith("_")]
-  # print (members)
-  # membersForm = [attr for attr in dir(form.data) if not callable(getattr(form, attr)) and not attr.startswith("_")]
-  # print (membersForm)
   
-  # members = ['name', 'city', 'phone', 'website', 'facebook_link', 'seeking_description', 'image_link', 'genres', 'seeking_talent', 'state', 'id']
-  members = ['name', 'city', 'phone', 'website', 'facebook_link', 'seeking_description', 'image_link']
-  #members = form.keys()
+  # members = ['name', 'city', 'phone', 'website', 'facebook_link', 'seeking_description', 'image_link']
+  members = [attr for attr in form.data.keys() if not attr.startswith("csrf")]
+  print ('members : ', members)
   for attr in members:
-    print('attr: ', attr)
-    print('s_artist.', attr,': ', getattr(s_artist, attr))
-    #setattr(form, attr, getattr(s_venue, attr))
-    print('form.'+attr+'.data = getattr(s_artist,\''+ attr+'\')')
-    exec('form.'+attr+'.data = getattr(s_artist,\''+ attr+'\')')
-    print('form.', attr,': ', getattr(form, attr))
-  print('loop done!')
+    # print('attr: ' + attr)
+    # print('s_artist.' + attr + ': ', getattr(s_artist, attr))
+    # print('form.' + attr + '.data = getattr(s_artist,\''+ attr + '\')')
+    exec('form.' + attr + '.data = getattr(s_artist,\'' + attr + '\')')
+    # print('form.' + attr + ': ', getattr(form, attr))
+  # print('loop done!')
 
   # form.name.data                = s_venue.name
   # form.address.data             = s_venue.address
@@ -626,12 +621,9 @@ def edit_artist(artist_id):
   # form.seeking_description.data = s_venue.seeking_description
   # form.image_link.data          = s_venue.image_link
 
-  form.genres.data         = genresArtist
-  form.state.data          = s_artist.state
-  form.seeking_venue.data = str(s_artist.seeking_venue)
-  # print('form: ')
-  # for key in form:
-  #   print('form[', key,']: ', getattr(form, key))
+  # form.genres.data         = genresArtist
+  # form.state.data          = s_artist.state
+  form.seeking_venue.data  = str(s_artist.seeking_venue)
   
   print('form.genres', form.genres)
   return render_template('forms/edit_artist.html', form=form, artist=artist)
@@ -682,23 +674,19 @@ def edit_venue(venue_id):
     "seeking_description":  s_venue.seeking_description,
     "image_link":           s_venue.image_link
   }
-  # members = [attr for attr in dir(s_venue) if not callable(getattr(s_venue, attr)) and not attr.startswith("_")]
-  # print (members)
-  # membersForm = [attr for attr in dir(form.data) if not callable(getattr(form, attr)) and not attr.startswith("_")]
-  # print (membersForm)
+
+  # members = ['name', 'address', 'city', 'phone', 'website', 'facebook_link', 'seeking_description', 'image_link']
   
-  # members = ['name', 'address', 'city', 'phone', 'website', 'facebook_link', 'seeking_description', 'image_link', 'genres', 'seeking_talent', 'state', 'id']
-  members = ['name', 'address', 'city', 'phone', 'website', 'facebook_link', 'seeking_description', 'image_link']
-  #members = form.keys()
+  members = [attr for attr in form.data.keys() if not attr.startswith("csrf")]
+  print ('members : ', members)
+
   for attr in members:
-    print('attr: ', attr)
-    print('s_venue.', attr,': ', getattr(s_venue, attr))
-    #setattr(form, attr, getattr(s_venue, attr))
-    print('form.'+attr+'.data = getattr(s_venue,\''+ attr+'\')')
-    exec('form.'+attr+'.data = getattr(s_venue,\''+ attr+'\')')
-    print('form.', attr,': ', getattr(form, attr))
-  print('loop done!')
-  print('form.address', form.address)
+    # print('attr: ' + attr)
+    # print('s_venue.' + attr + ': ', getattr(s_venue, attr))
+    # print('form.' + attr + '.data = getattr(s_venue,\'' + attr + '\')')
+    exec('form.' + attr + '.data = getattr(s_venue,\'' + attr + '\')')
+    # print('form.' + attr + ': ', getattr(form, attr))
+  # print('loop done!')
 
   # form.name.data                = s_venue.name
   # form.address.data             = s_venue.address
@@ -709,12 +697,9 @@ def edit_venue(venue_id):
   # form.seeking_description.data = s_venue.seeking_description
   # form.image_link.data          = s_venue.image_link
 
-  form.genres.data         = genresVenue
-  form.state.data          = s_venue.state
+  # form.genres.data         = genresVenue
+  # form.state.data          = s_venue.state
   form.seeking_talent.data = str(s_venue.seeking_talent)
-  # print('form: ')
-  # for key in form:
-  #   print('form[', key,']: ', getattr(form, key))
   
   print('form.genres', form.genres)
 
@@ -726,7 +711,7 @@ def edit_venue_submission(venue_id):
   # TODO: take values from the form submitted, and update existing
   # venue record with ID <venue_id> using the new attributes
   f = request.form
-  addValuesFromFormInDb(f,'venue-edit-'+str(venue_id))
+  addValuesFromFormInDb(f,'venue-edit-' + str(venue_id))
   return redirect(url_for('show_venue', venue_id=venue_id))
 
 #  Create Artist
